@@ -12,7 +12,7 @@ The current audit confirms React Router owns the `/zona` workspace and module pl
 - The safe mock adapter validates domain inputs and uses documentation-only IP space. It never performs an arbitrary external fetch.
 - Result actions update auditable workspace state; graph, timeline, and evidence actions open working views, while pivot queue/ignore controls persist for the session.
 
-No database migration or HTTP route was added: neither Prisma nor a server exists in this frontend-only baseline. A future backend should expose `POST /api/zona/commands`, `/footprint`, `/recon`, and `/pivot` only after session RBAC, rate limiting, cancellation, audit persistence, and server-side provider credentials are available.
+The original Phase 1 baseline had no database migration or HTTP route because neither Prisma nor a persistent application server was present. Phone Intelligence Phase 1–2 adds narrowly scoped Vercel functions; broader command persistence still requires session RBAC, durable rate limiting, audit persistence, and server-side provider credentials.
 
 ## Boundaries
 The console parses an application command language only; it never invokes an operating-system shell. A deny-list guard rejects offensive access, credential, malware, phishing, tracking, and exploitation intents. Phase 1 providers are deterministic fictional mocks using reserved `.example`/`.test` domains and documentation IP ranges.
@@ -26,3 +26,9 @@ The console parses an application command language only; it never invokes an ope
 
 ## Security model
 All future external retrieval must be server-side through allow-listed provider adapters, scoped credentials, rate limits, structured audit events, and case authorization. Relationship assertions must retain source, timestamp, confidence, and analyst validation. Analysts cannot delete audit records.
+
+## Phone Intelligence Indonesia (Phase 1–2)
+
+`phone` commands reuse the command parser, workspace result, graph, timeline, evidence, and case action surfaces. The normalization and prefix allocation dataset live in `src/modules/phone`; public search is behind a provider adapter. Browser code never receives search credentials. `api/zona/phone/lookup.js` selects Serper or Brave from server-side environment variables, applies request throttling, query deduplication, HTTPS URL checks, timeouts, and result deduplication. Without configuration the client uses safe mock data only for `+6281200000000`; every other number returns an honest empty-footprint state.
+
+Supported commands: `phone <number>`, `phone lookup`, `phone footprint`, `phone web`, `phone documents`, `phone graph`, `phone timeline`, `phone evidence`, and `phone pivot`.

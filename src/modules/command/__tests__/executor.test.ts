@@ -5,3 +5,6 @@ describe('Phase 1 command execution',()=>{
  it('supports a quoted organization footprint',async()=>{const output=await executeCommand(parseCommand('footprint organization "Example Corp"',{analystId:'A'}));expect(output.result?.target).toBe('Example Corp');expect(output.result?.targetType).toBe('organization')});
  it('validates footprint syntax',async()=>{const output=await executeCommand(parseCommand('footprint domain',{analystId:'A'}));expect(output.title).toBe('VALIDATION ERROR')});
 });
+
+import {parseCommand as parsePhone} from '../parser';
+it('executes Indonesian phone intelligence with safe empty state',async()=>{const output=await executeCommand(parsePhone('phone lookup +62 812-3456-7891',{analystId:'A'}));expect(output.result?.kind).toBe('phone');expect(output.lines).toContain('E164 .......................... +6281234567891');});
