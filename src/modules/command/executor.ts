@@ -4,6 +4,7 @@ import {commandRegistry} from './commandRegistry';
 import {createPhoneIntelligence} from '../phone/createPhoneResult';
 import {createUsernameIntelligence} from '../username/usernameService';
 import {createEmailIntelligence} from '../email/emailService';
+import {createDocumentIntelligence} from '../document/documentService';
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput>{
  const {command,args}=parsed;
@@ -11,6 +12,11 @@ export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput
  if(command==='status')return {title:'SYSTEM STATUS // NOMINAL',tone:'success',lines:['Mock OSINT provider ...... ONLINE','Correlation engine ....... ONLINE','Audit stream ............. ACTIVE','Current classification ... INTERNAL']};
  if(command==='history')return {title:'QUERY HISTORY',tone:'info',lines:['Open the execution history tray below for commands, status, provider, and duration.']};
  if(command==='clear')return {title:'CLEAR',tone:'info',lines:[]};
+ if(command==='document'){
+  const modes=['analyze','entities','metadata','links','timeline'] as const;const mode=modes.includes(args[0] as typeof modes[number])?args[0] as typeof modes[number]:undefined;const file=args.slice(1).join(' ');
+  if(!mode||!file)return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: document <analyze|entities|metadata|links|timeline> <file>','Supported: PDF · DOCX · XLSX · PPTX · TXT · HTML']};
+  const result=createDocumentIntelligence(file,mode);return {title:'PEGASUS DOCUMENT INTELLIGENCE // COMPLETE',tone:'success',lines:[`FILE ........................... ${result.metadata.name}`,`MIME ........................... ${result.metadata.mime}`,`SHA256 ......................... ${result.metadata.sha256}`,`ENTITIES ....................... ${result.entities.length}`,`LINKS .......................... ${result.links.length}`,`ANOMALIES ...................... ${result.anomalies.length} · REQUIRES REVIEW`,'SOURCE PRESERVED · DERIVATIVE ANALYSIS STORED SEPARATELY','OPENING DOCUMENT WORKSPACE...'],result};
+ }
  if(command==='email'){
   const actions=['lookup','footprint','web','documents','graph','timeline','pivot','exposure'];const mode=actions.includes(args[0])?args[0]:'lookup';const raw=mode==='lookup'&&args[0]!=='lookup'?args[0]:args[1];if(!raw)return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: email [lookup|footprint|web|documents|graph|timeline|pivot|exposure] <email>']};
   const result=await createEmailIntelligence(raw,mode as Parameters<typeof createEmailIntelligence>[1]);const m=result.metadata;return {title:'EMAIL INTELLIGENCE // PUBLIC EXPOSURE',tone:'success',lines:[`LOCAL PART ..................... ${m.localPart}`,`DOMAIN ......................... ${m.domain}`,`VALID FORMAT ................... YES`,`MX STATUS ..................... ${m.mxStatus}`,`MAIL PROVIDER .................. ${m.mailProvider}`,`PUBLIC MENTIONS ................ ${result.mentions.length}`,`EXPOSURE STATUS ................ ${result.exposure.status.toUpperCase()}`,`CONFIDENCE ..................... ${result.confidence.score}%`,'PUBLIC/AUTHORIZED DATA ONLY · NO CREDENTIAL CONTENT'],result};
