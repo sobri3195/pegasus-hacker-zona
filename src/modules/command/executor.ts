@@ -4,6 +4,7 @@ import {commandRegistry} from './commandRegistry';
 import {createPhoneIntelligence} from '../phone/createPhoneResult';
 import {createUsernameIntelligence} from '../username/usernameService';
 import {createEmailIntelligence} from '../email/emailService';
+import {createDomainIntelligence} from '../domain/domainService';
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput>{
  const {command,args}=parsed;
@@ -30,10 +31,10 @@ export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput
   const targetType=args[0] as 'domain'|'username'|'organization';const target=args.slice(1).join(' ');if(!['domain','username','organization'].includes(targetType)||!target)return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: footprint <domain|username|organization> <target>']};
   await wait(180);const result=createMockFootprint(target,'footprint',targetType);return {title:'DIGITAL FOOTPRINT ANALYSIS // COMPLETE',tone:'success',lines:[`TARGET .................... ${result.target}`,`DISCOVERY ................. ${result.findings.length} FINDINGS`,`ENTITIES .................. ${result.findings.filter(f=>f.entityType).length}`,`RELATIONSHIPS ............. ${result.relationships.length}`,`TIMELINE .................. GENERATED`,`CONFIDENCE ................ ${result.confidence.score}%`,'OPENING INTELLIGENCE WORKSPACE...'],result};
  }
- if(command==='recon'){
-  if(args[0]!=='domain'||!args[1])return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: recon domain example.com']};await wait(250);const result=createMockFootprint(args[1],'recon');return {title:'DOMAIN RECON // COMPLETED',tone:'success',lines:[...result.stages.map(s=>`${s.label.padEnd(28,'.')} ✓`),`${result.findings.length} FINDINGS · ${result.relationships.length} RELATIONSHIPS · ${result.timeline.length} EVENTS`,`${(result.durationMs/1000).toFixed(2)} sec · OPENING INVESTIGATION VIEW...`],result};
+ if(['domain','recon','infra','infra-history','cert','dns','subdomains'].includes(command)){
+  const target=command==='recon'&&args[0]==='domain'?args[1]:args[0];if(!target)return {title:'VALIDATION ERROR',tone:'warning',lines:[`Usage: ${command} example.com`]};
+  try{await wait(120);const result=await createDomainIntelligence(target,command as Parameters<typeof createDomainIntelligence>[1]);return {title:`DOMAIN INFRASTRUCTURE V2 // ${command.toUpperCase()}`,tone:'success',lines:[...result.stages.map(s=>`${s.label.padEnd(32,'.')} ✓`),`${result.summary.currentIps.length} CURRENT IP · ${result.summary.historicalIps.length} HISTORICAL IP · ${result.summary.subdomains.length} SUBDOMAINS`,`${result.changes.length} CHANGES · ${result.risks.length} EXPLAINABLE RISK SIGNALS`,'ALL RESULTS INCLUDE SOURCE + RETRIEVAL TIME · OPENING INVESTIGATION VIEW...'],result};}catch(error){return {title:'VALIDATION ERROR',tone:'warning',lines:[error instanceof Error?error.message:'Domain investigation failed safely.']};}
  }
- if(command==='domain'){if(!args[0])return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: domain example.com']};const result=createMockFootprint(args[0],'domain');return {title:'DOMAIN INTELLIGENCE COMPLETE',tone:'success',lines:[`${result.findings.length} public-source findings found.`,`Smart Pivot generated ${result.pivots.length} recommended next steps.`],result};}
  if(command==='pivot')return {title:'PEGASUS SMART PIVOT',tone:'info',lines:['Open the active result to review reason, source, confidence, cost, and case context.']};
  if(['graph','timeline'].includes(command))return {title:`${command.toUpperCase()} VIEW READY`,tone:'info',lines:[`Workspace switched to ${command} for ${args.join(' ')||'the active case'}.`]};
  return {title:`${command.toUpperCase()} SEARCH COMPLETE`,tone:'success',lines:[`Authorized mock provider searched for “${args.join(' ')||'current context'}”.`,'No live personal data or protected system was accessed.']};
