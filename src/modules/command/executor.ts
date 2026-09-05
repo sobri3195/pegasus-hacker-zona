@@ -4,7 +4,8 @@ import {commandRegistry} from './commandRegistry';
 import {createPhoneIntelligence} from '../phone/createPhoneResult';
 import {createUsernameIntelligence} from '../username/usernameService';
 import {createEmailIntelligence} from '../email/emailService';
-import {createDocumentIntelligence} from '../document/documentService';
+import {createDomainIntelligence} from '../domain/domainService';
+import {analyzeMedia} from '../media/mediaService';
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput>{
  const {command,args}=parsed;
@@ -12,10 +13,10 @@ export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput
  if(command==='status')return {title:'SYSTEM STATUS // NOMINAL',tone:'success',lines:['Mock OSINT provider ...... ONLINE','Correlation engine ....... ONLINE','Audit stream ............. ACTIVE','Current classification ... INTERNAL']};
  if(command==='history')return {title:'QUERY HISTORY',tone:'info',lines:['Open the execution history tray below for commands, status, provider, and duration.']};
  if(command==='clear')return {title:'CLEAR',tone:'info',lines:[]};
- if(command==='document'){
-  const modes=['analyze','entities','metadata','links','timeline'] as const;const mode=modes.includes(args[0] as typeof modes[number])?args[0] as typeof modes[number]:undefined;const file=args.slice(1).join(' ');
-  if(!mode||!file)return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: document <analyze|entities|metadata|links|timeline> <file>','Supported: PDF · DOCX · XLSX · PPTX · TXT · HTML']};
-  const result=createDocumentIntelligence(file,mode);return {title:'PEGASUS DOCUMENT INTELLIGENCE // COMPLETE',tone:'success',lines:[`FILE ........................... ${result.metadata.name}`,`MIME ........................... ${result.metadata.mime}`,`SHA256 ......................... ${result.metadata.sha256}`,`ENTITIES ....................... ${result.entities.length}`,`LINKS .......................... ${result.links.length}`,`ANOMALIES ...................... ${result.anomalies.length} · REQUIRES REVIEW`,'SOURCE PRESERVED · DERIVATIVE ANALYSIS STORED SEPARATELY','OPENING DOCUMENT WORKSPACE...'],result};
+ if(command==='media'||command==='image'){
+  const mode=args[0] as 'analyze'|'metadata'|'ocr'|'hash'|'compare';const allowed=command==='media'?['analyze','compare']:['metadata','ocr','hash'];
+  if(!allowed.includes(mode)||!args[1]||(mode==='compare'&&!args[2]))return {title:'VALIDATION ERROR',tone:'warning',lines:[command==='media'?'Usage: media analyze <file> | media compare <image1> <image2>':'Usage: image metadata|ocr|hash <file>','Select files using the MEDIA EVIDENCE picker first.']};
+  try{const result=await analyzeMedia(args[1],mode,args[2]);const m=result.metadata;return {title:`PEGASUS MEDIA INTELLIGENCE // ${mode.toUpperCase()}`,tone:'success',lines:[`ORIGINAL SHA-256 ............... ${result.hashes.sha256}`,`MIME .......................... ${m.mime}`,`DIMENSIONS .................... ${m.width&&m.height?`${m.width} × ${m.height}`:'N/A'}`,...(result.hashes.ahash?[`aHash .......................... ${result.hashes.ahash}`,`dHash .......................... ${result.hashes.dhash}`,`pHash .......................... ${result.hashes.phash}`]:[]),...(result.comparison?[`SIMILARITY ..................... ${result.comparison.similarity}% · HEURISTIC ONLY`]:[]),'ORIGINAL PRESERVED · ANALYSIS DERIVATIVE SEPARATE'],result}}catch(error){return {title:'MEDIA ANALYSIS ERROR',tone:'warning',lines:[error instanceof Error?error.message:'Media analysis failed safely.']}}
  }
  if(command==='email'){
   const actions=['lookup','footprint','web','documents','graph','timeline','pivot','exposure'];const mode=actions.includes(args[0])?args[0]:'lookup';const raw=mode==='lookup'&&args[0]!=='lookup'?args[0]:args[1];if(!raw)return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: email [lookup|footprint|web|documents|graph|timeline|pivot|exposure] <email>']};

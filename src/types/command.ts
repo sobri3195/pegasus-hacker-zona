@@ -3,7 +3,7 @@ export interface ParsedStage { command: string; args: string[]; flags: Record<st
 export interface ParsedCommand extends ParsedStage { raw: string; pipeline: ParsedStage[]; timestamp: string; analystId: string; investigationId?: string; }
 export type ExecutionStatus = 'SUCCESS' | 'BLOCKED' | 'ERROR';
 export interface CommandRecord { id: string; raw: string; timestamp: string; duration: number; status: ExecutionStatus; provider: string; caseId?: string; }
-export type EntityKind='DOMAIN'|'IP_ADDRESS'|'ASN'|'HOSTNAME'|'ORGANIZATION'|'EMAIL'|'USERNAME'|'URL'|'DOCUMENT'|'PHONE'|'LOCATION';
+export type EntityKind='DOMAIN'|'IP_ADDRESS'|'ASN'|'HOSTNAME'|'ORGANIZATION'|'EMAIL'|'USERNAME'|'URL'|'DOCUMENT'|'PHONE'|'LOCATION'|'DATE';
 export interface Provenance {id:string;source:string;retrievedAt:string;method:string;confidence:'HIGH'|'MEDIUM'|'LOW';sourceUrl?:string}
 export interface Finding {id:string;category:string;label:string;value:string;entityType?:EntityKind;provenance:Provenance}
 export interface Relationship {id:string;from:string;to:string;type:string;sourceId:string;confidence:number;createdAt:string;validationStatus:'UNVERIFIED'|'VALIDATED'}
@@ -22,11 +22,15 @@ export interface EmailMetadata {raw:string;normalized:string;localPart:string;do
 export interface EmailMention {id:string;title:string;url:string;snippet:string;source:string;category:'WEB'|'DOCUMENT'|'REPOSITORY'|'PUBLIC PROFILE';matchType:'EXACT'|'CO-OCCURRENCE';retrievedAt:string;nearby?:{person?:string;organization?:string;phone?:string;domain?:string;location?:string;date?:string}}
 export interface EmailExposure {status:'Detected'|'Not detected'|'Not checked';provider:string;lawful:boolean;records:{breachName:string;year:number;dataCategories:string[]}[];note:string}
 export interface EmailIntelligenceResult extends Omit<FootprintResult,'kind'|'targetType'> {kind:'email';targetType:'email';mode:'lookup'|'footprint'|'web'|'documents'|'graph'|'timeline'|'pivot'|'exposure';metadata:EmailMetadata;mentions:EmailMention[];organization?:string;exposure:EmailExposure;mocked:boolean;provider:string;disclaimer:string}
-export type DocumentEntityKind='PERSON'|'ORGANIZATION'|'EMAIL'|'PHONE'|'DOMAIN'|'URL'|'IP'|'LOCATION'|'DATE'|'DOCUMENT REFERENCE';
-export interface DocumentEntity {id:string;kind:DocumentEntityKind;value:string;occurrences:number;context:string;confidence:'HIGH'|'MEDIUM'|'LOW'}
-export interface DocumentLink {id:string;url:string;domain:string;label:string;location:string;kind:'HYPERLINK'|'TEXT URL'}
-export interface DocumentAnomaly {id:string;label:'ANOMALY';finding:string;explanation:string;review:'REQUIRES REVIEW';severity:'LOW'|'MEDIUM'}
-export interface DocumentMetadata {name:string;mime:string;size:number;sha256:string;created:string;modified:string;author:string;creator:string;producer:string;application:string}
-export interface DocumentIntelligenceResult extends Omit<FootprintResult,'kind'|'targetType'> {kind:'document';targetType:'document';mode:'analyze'|'entities'|'metadata'|'links'|'timeline';metadata:DocumentMetadata;entities:DocumentEntity[];links:DocumentLink[];anomalies:DocumentAnomaly[];softwareSignatures:string[];evidence:{id:string;originalHashed:true;sourceModified:false;derivativeId:string;acquiredAt:string;method:string};mocked:true;provider:string;disclaimer:string}
-export type IntelligenceResult=FootprintResult|PhoneIntelligenceResult|UsernameIntelligenceResult|EmailIntelligenceResult|DocumentIntelligenceResult;
+export type DomainMode='domain'|'recon'|'infra'|'infra-history'|'cert'|'dns'|'subdomains';
+export interface DomainChange {id:string;at:string;type:'IP CHANGE'|'NS CHANGE'|'MX CHANGE'|'CERTIFICATE CHANGE'|'HOSTING CHANGE'|'NEW SUBDOMAIN'|'REMOVED SUBDOMAIN';before:string;after:string;provenance:Provenance}
+export interface DomainRisk {id:string;signal:'RECENTLY REGISTERED'|'SUSPICIOUS LOOKALIKE'|'SHORT CERTIFICATE AGE'|'INFRASTRUCTURE CHURN'|'THREAT-INTEL REPUTATION';severity:'LOW'|'MEDIUM'|'HIGH';score:number;explanation:string;evidence:string;provenance:Provenance}
+export interface DomainSummary {currentIps:string[];historicalIps:string[];nameservers:string[];mailInfrastructure:string[];certificates:string[];subdomains:string[];asn:string;hostingProvider:string;technology:string[];archivedHostnames:string[]}
+export interface DomainIntelligenceResult extends Omit<FootprintResult,'kind'|'targetType'> {kind:'domain-v2';targetType:'domain';mode:DomainMode;summary:DomainSummary;changes:DomainChange[];risks:DomainRisk[];mocked:boolean;provider:string;disclaimer:string}
+export interface MediaEntity {kind:'PHONE'|'EMAIL'|'URL'|'DOMAIN'|'ORGANIZATION'|'LOCATION'|'DATE';value:string}
+export interface MediaHashes {sha256:string;ahash?:string;dhash?:string;phash?:string}
+export interface MediaMetadata {mime:string;size:number;width?:number;height?:number;cameraMake?:string;cameraModel?:string;software?:string;createdAt?:string;orientation?:string;colorProfile?:string;gps?:{latitude:number;longitude:number};codec?:string;duration?:number;frameRate?:number}
+export interface MediaComparison {target:string;similarity:number;metadataDifferences:string[];dimensionDifference:string;hashDistance?:number;possibleRecompression:boolean;possibleCrop:boolean;disclaimer:string}
+export interface MediaIntelligenceResult extends Omit<FootprintResult,'kind'|'targetType'> {kind:'media';targetType:'document';mode:'analyze'|'metadata'|'ocr'|'hash'|'compare';fileName:string;format:string;metadata:MediaMetadata;hashes:MediaHashes;ocrText:string;entities:MediaEntity[];comparison?:MediaComparison;originalPreserved:true;derivativeSeparated:true;disclaimer:string}
+export type IntelligenceResult=FootprintResult|PhoneIntelligenceResult|UsernameIntelligenceResult|EmailIntelligenceResult|DomainIntelligenceResult|MediaIntelligenceResult;
 export interface CommandOutput { title:string; tone:'success'|'info'|'warning'|'danger'; lines:string[]; result?:IntelligenceResult; }
