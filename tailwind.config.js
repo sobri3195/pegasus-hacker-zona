@@ -1,0 +1,2 @@
+/** @type {import('tailwindcss').Config} */
+export default {content:['./index.html','./src/**/*.{ts,tsx}'],theme:{extend:{fontFamily:{sans:['Inter','ui-sans-serif','system-ui'],mono:['IBM Plex Mono','ui-monospace','monospace']},colors:{zona:{950:'#050a10',900:'#08111b',800:'#0c1925',700:'#122535',cyan:'#15d7e8',blue:'#3182f6',amber:'#f2a93b'}},boxShadow:{glow:'0 0 30px rgba(21,215,232,.08)'}}},plugins:[]};
