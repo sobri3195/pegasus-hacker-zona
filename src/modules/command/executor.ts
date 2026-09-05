@@ -5,6 +5,7 @@ import {createPhoneIntelligence} from '../phone/createPhoneResult';
 import {createUsernameIntelligence} from '../username/usernameService';
 import {createEmailIntelligence} from '../email/emailService';
 import {createDomainIntelligence} from '../domain/domainService';
+import {analyzeMedia} from '../media/mediaService';
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput>{
  const {command,args}=parsed;
@@ -12,6 +13,11 @@ export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput
  if(command==='status')return {title:'SYSTEM STATUS // NOMINAL',tone:'success',lines:['Mock OSINT provider ...... ONLINE','Correlation engine ....... ONLINE','Audit stream ............. ACTIVE','Current classification ... INTERNAL']};
  if(command==='history')return {title:'QUERY HISTORY',tone:'info',lines:['Open the execution history tray below for commands, status, provider, and duration.']};
  if(command==='clear')return {title:'CLEAR',tone:'info',lines:[]};
+ if(command==='media'||command==='image'){
+  const mode=args[0] as 'analyze'|'metadata'|'ocr'|'hash'|'compare';const allowed=command==='media'?['analyze','compare']:['metadata','ocr','hash'];
+  if(!allowed.includes(mode)||!args[1]||(mode==='compare'&&!args[2]))return {title:'VALIDATION ERROR',tone:'warning',lines:[command==='media'?'Usage: media analyze <file> | media compare <image1> <image2>':'Usage: image metadata|ocr|hash <file>','Select files using the MEDIA EVIDENCE picker first.']};
+  try{const result=await analyzeMedia(args[1],mode,args[2]);const m=result.metadata;return {title:`PEGASUS MEDIA INTELLIGENCE // ${mode.toUpperCase()}`,tone:'success',lines:[`ORIGINAL SHA-256 ............... ${result.hashes.sha256}`,`MIME .......................... ${m.mime}`,`DIMENSIONS .................... ${m.width&&m.height?`${m.width} × ${m.height}`:'N/A'}`,...(result.hashes.ahash?[`aHash .......................... ${result.hashes.ahash}`,`dHash .......................... ${result.hashes.dhash}`,`pHash .......................... ${result.hashes.phash}`]:[]),...(result.comparison?[`SIMILARITY ..................... ${result.comparison.similarity}% · HEURISTIC ONLY`]:[]),'ORIGINAL PRESERVED · ANALYSIS DERIVATIVE SEPARATE'],result}}catch(error){return {title:'MEDIA ANALYSIS ERROR',tone:'warning',lines:[error instanceof Error?error.message:'Media analysis failed safely.']}}
+ }
  if(command==='email'){
   const actions=['lookup','footprint','web','documents','graph','timeline','pivot','exposure'];const mode=actions.includes(args[0])?args[0]:'lookup';const raw=mode==='lookup'&&args[0]!=='lookup'?args[0]:args[1];if(!raw)return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: email [lookup|footprint|web|documents|graph|timeline|pivot|exposure] <email>']};
   const result=await createEmailIntelligence(raw,mode as Parameters<typeof createEmailIntelligence>[1]);const m=result.metadata;return {title:'EMAIL INTELLIGENCE // PUBLIC EXPOSURE',tone:'success',lines:[`LOCAL PART ..................... ${m.localPart}`,`DOMAIN ......................... ${m.domain}`,`VALID FORMAT ................... YES`,`MX STATUS ..................... ${m.mxStatus}`,`MAIL PROVIDER .................. ${m.mailProvider}`,`PUBLIC MENTIONS ................ ${result.mentions.length}`,`EXPOSURE STATUS ................ ${result.exposure.status.toUpperCase()}`,`CONFIDENCE ..................... ${result.confidence.score}%`,'PUBLIC/AUTHORIZED DATA ONLY · NO CREDENTIAL CONTENT'],result};

@@ -3,7 +3,7 @@ export interface ParsedStage { command: string; args: string[]; flags: Record<st
 export interface ParsedCommand extends ParsedStage { raw: string; pipeline: ParsedStage[]; timestamp: string; analystId: string; investigationId?: string; }
 export type ExecutionStatus = 'SUCCESS' | 'BLOCKED' | 'ERROR';
 export interface CommandRecord { id: string; raw: string; timestamp: string; duration: number; status: ExecutionStatus; provider: string; caseId?: string; }
-export type EntityKind='DOMAIN'|'IP_ADDRESS'|'ASN'|'HOSTNAME'|'ORGANIZATION'|'EMAIL'|'USERNAME'|'URL'|'DOCUMENT'|'PHONE'|'LOCATION';
+export type EntityKind='DOMAIN'|'IP_ADDRESS'|'ASN'|'HOSTNAME'|'ORGANIZATION'|'EMAIL'|'USERNAME'|'URL'|'DOCUMENT'|'PHONE'|'LOCATION'|'DATE';
 export interface Provenance {id:string;source:string;retrievedAt:string;method:string;confidence:'HIGH'|'MEDIUM'|'LOW';sourceUrl?:string}
 export interface Finding {id:string;category:string;label:string;value:string;entityType?:EntityKind;provenance:Provenance}
 export interface Relationship {id:string;from:string;to:string;type:string;sourceId:string;confidence:number;createdAt:string;validationStatus:'UNVERIFIED'|'VALIDATED'}
@@ -27,5 +27,10 @@ export interface DomainChange {id:string;at:string;type:'IP CHANGE'|'NS CHANGE'|
 export interface DomainRisk {id:string;signal:'RECENTLY REGISTERED'|'SUSPICIOUS LOOKALIKE'|'SHORT CERTIFICATE AGE'|'INFRASTRUCTURE CHURN'|'THREAT-INTEL REPUTATION';severity:'LOW'|'MEDIUM'|'HIGH';score:number;explanation:string;evidence:string;provenance:Provenance}
 export interface DomainSummary {currentIps:string[];historicalIps:string[];nameservers:string[];mailInfrastructure:string[];certificates:string[];subdomains:string[];asn:string;hostingProvider:string;technology:string[];archivedHostnames:string[]}
 export interface DomainIntelligenceResult extends Omit<FootprintResult,'kind'|'targetType'> {kind:'domain-v2';targetType:'domain';mode:DomainMode;summary:DomainSummary;changes:DomainChange[];risks:DomainRisk[];mocked:boolean;provider:string;disclaimer:string}
-export type IntelligenceResult=FootprintResult|PhoneIntelligenceResult|UsernameIntelligenceResult|EmailIntelligenceResult|DomainIntelligenceResult;
+export interface MediaEntity {kind:'PHONE'|'EMAIL'|'URL'|'DOMAIN'|'ORGANIZATION'|'LOCATION'|'DATE';value:string}
+export interface MediaHashes {sha256:string;ahash?:string;dhash?:string;phash?:string}
+export interface MediaMetadata {mime:string;size:number;width?:number;height?:number;cameraMake?:string;cameraModel?:string;software?:string;createdAt?:string;orientation?:string;colorProfile?:string;gps?:{latitude:number;longitude:number};codec?:string;duration?:number;frameRate?:number}
+export interface MediaComparison {target:string;similarity:number;metadataDifferences:string[];dimensionDifference:string;hashDistance?:number;possibleRecompression:boolean;possibleCrop:boolean;disclaimer:string}
+export interface MediaIntelligenceResult extends Omit<FootprintResult,'kind'|'targetType'> {kind:'media';targetType:'document';mode:'analyze'|'metadata'|'ocr'|'hash'|'compare';fileName:string;format:string;metadata:MediaMetadata;hashes:MediaHashes;ocrText:string;entities:MediaEntity[];comparison?:MediaComparison;originalPreserved:true;derivativeSeparated:true;disclaimer:string}
+export type IntelligenceResult=FootprintResult|PhoneIntelligenceResult|UsernameIntelligenceResult|EmailIntelligenceResult|DomainIntelligenceResult|MediaIntelligenceResult;
 export interface CommandOutput { title:string; tone:'success'|'info'|'warning'|'danger'; lines:string[]; result?:IntelligenceResult; }
