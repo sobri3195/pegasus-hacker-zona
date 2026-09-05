@@ -32,3 +32,9 @@ All future external retrieval must be server-side through allow-listed provider 
 `phone` commands reuse the command parser, workspace result, graph, timeline, evidence, and case action surfaces. The normalization and prefix allocation dataset live in `src/modules/phone`; public search is behind a provider adapter. Browser code never receives search credentials. `api/zona/phone/lookup.js` selects Serper or Brave from server-side environment variables, applies request throttling, query deduplication, HTTPS URL checks, timeouts, and result deduplication. Without configuration the client uses safe mock data only for `+6281200000000`; every other number returns an honest empty-footprint state.
 
 Supported commands: `phone <number>`, `phone lookup`, `phone footprint`, `phone web`, `phone documents`, `phone graph`, `phone timeline`, `phone evidence`, and `phone pivot`.
+
+## Email Intelligence & Public Exposure
+
+`email` supports lookup, footprint, web, documents, graph, timeline, pivot, and exposure workflows. The implementation normalizes whitespace/case and IDN domains, separates local/domain metadata, identifies known MX/provider metadata, correlates the domain and organization, and returns evidence-backed public web, document, and repository mentions. Document entities are explicitly labelled **CO-OCCURRENCE**, never ownership.
+
+The built-in safe adapter provides a complete deterministic demonstration for `name@example.com`; unknown valid addresses return honest empty results rather than invented mentions. Breach status remains **Not checked** unless a lawful provider is configured—this is deliberately distinct from “Not detected.” The module never requests or displays passwords, credential dumps, tokens, secrets, private mailbox data, or email contents.
