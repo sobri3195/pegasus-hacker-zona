@@ -1,6 +1,7 @@
 import type {CommandOutput,ParsedCommand} from '../../types/command';
 import {createMockFootprint} from '../providers/types';
 import {commandRegistry} from './commandRegistry';
+import {createPhoneIntelligence} from '../phone/createPhoneResult';
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput>{
  const {command,args}=parsed;
@@ -8,6 +9,11 @@ export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput
  if(command==='status')return {title:'SYSTEM STATUS // NOMINAL',tone:'success',lines:['Mock OSINT provider ...... ONLINE','Correlation engine ....... ONLINE','Audit stream ............. ACTIVE','Current classification ... INTERNAL']};
  if(command==='history')return {title:'QUERY HISTORY',tone:'info',lines:['Open the execution history tray below for commands, status, provider, and duration.']};
  if(command==='clear')return {title:'CLEAR',tone:'info',lines:[]};
+ if(command==='phone'){
+  const actions=['lookup','footprint','web','documents','graph','timeline','evidence','pivot'];const mode=actions.includes(args[0])?args[0]:'lookup';const raw=(mode==='lookup'&&args[0]!=='lookup'?args:args.slice(1)).join(' ');
+  if(!raw)return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: phone [lookup|footprint|web|documents|graph|timeline|evidence|pivot] <nomor Indonesia>']};
+  const result=await createPhoneIntelligence(raw,mode);const m=result.metadata;return {title:'PEGASUS ZONA // PHONE INTELLIGENCE',tone:'success',lines:[`NORMALIZING NUMBER ............ DONE`,`COUNTRY ....................... ${m.country.toUpperCase()}`,`E164 .......................... ${m.e164}`,`PREFIX ........................ ${m.prefix}`,`CARRIER HINT .................. ${m.carrierHint.toUpperCase()}`,`PUBLIC WEB .................... ${result.references.length}`,`RELATIONSHIPS ................. ${result.relationships.length}`,'ANALYSIS COMPLETE',`CONFIDENCE: ${result.confidence.score}%`,'OPENING INTELLIGENCE VIEW...'],result};
+ }
  if(command==='case'&&args[0]==='open')return {title:'CASE CONTEXT UPDATED',tone:'success',lines:[`${args[1]??'CASE-2026-001'} is now active.`]};
  if(command==='footprint'){
   const targetType=args[0] as 'domain'|'username'|'organization';const target=args.slice(1).join(' ');if(!['domain','username','organization'].includes(targetType)||!target)return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: footprint <domain|username|organization> <target>']};
