@@ -2,6 +2,7 @@ import type {CommandOutput,ParsedCommand} from '../../types/command';
 import {createMockFootprint} from '../providers/types';
 import {commandRegistry} from './commandRegistry';
 import {createPhoneIntelligence} from '../phone/createPhoneResult';
+import {createUsernameIntelligence} from '../username/usernameService';
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput>{
  const {command,args}=parsed;
@@ -13,6 +14,11 @@ export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput
   const actions=['lookup','footprint','web','documents','graph','timeline','evidence','pivot'];const mode=actions.includes(args[0])?args[0]:'lookup';const raw=(mode==='lookup'&&args[0]!=='lookup'?args:args.slice(1)).join(' ');
   if(!raw)return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: phone [lookup|footprint|web|documents|graph|timeline|evidence|pivot] <nomor Indonesia>']};
   const result=await createPhoneIntelligence(raw,mode);const m=result.metadata;return {title:'PEGASUS ZONA // PHONE INTELLIGENCE',tone:'success',lines:[`NORMALIZING NUMBER ............ DONE`,`COUNTRY ....................... ${m.country.toUpperCase()}`,`E164 .......................... ${m.e164}`,`PREFIX ........................ ${m.prefix}`,`CARRIER HINT .................. ${m.carrierHint.toUpperCase()}`,`PUBLIC WEB .................... ${result.references.length}`,`RELATIONSHIPS ................. ${result.relationships.length}`,'ANALYSIS COMPLETE',`CONFIDENCE: ${result.confidence.score}%`,'OPENING INTELLIGENCE VIEW...'],result};
+ }
+ if(command==='username'){
+  const actions=['footprint','web','graph','timeline','pivot','compare'];const mode=actions.includes(args[0])?args[0]:'lookup';const rest=mode==='lookup'?args:args.slice(1);const raw=rest[0];
+  if(!raw||(mode==='compare'&&!rest[1]))return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: username [footprint|web|graph|timeline|pivot] <username>','       username compare <username> <username>']};
+  const result=await createUsernameIntelligence(raw,mode as 'lookup'|'footprint'|'web'|'graph'|'timeline'|'pivot'|'compare',rest[1]);const comparison=result.comparison;return {title:comparison?'USERNAME COMPARISON // INFERENCE':'USERNAME INTELLIGENCE // PUBLIC PRESENCE',tone:'success',lines:[`NORMALIZED USERNAME ........... ${result.normalizedUsername}`,`PUBLIC PROFILES ............... ${result.profiles.length}`,`RELATIONSHIPS ................. ${result.relationships.length}`,`CONFIDENCE .................... ${result.confidence.score}%`,...(comparison?[`USERNAME SIMILARITY ........... ${comparison.usernameSimilarity}%`,`CONCLUSION .................... ${comparison.conclusion}`]:[]),'PUBLIC/INDEXED SOURCES ONLY · SAME USERNAME ≠ SAME PERSON'],result};
  }
  if(command==='case'&&args[0]==='open')return {title:'CASE CONTEXT UPDATED',tone:'success',lines:[`${args[1]??'CASE-2026-001'} is now active.`]};
  if(command==='footprint'){
