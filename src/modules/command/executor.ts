@@ -6,6 +6,7 @@ import {createUsernameIntelligence} from '../username/usernameService';
 import {createEmailIntelligence} from '../email/emailService';
 import {createDomainIntelligence} from '../domain/domainService';
 import {analyzeMedia} from '../media/mediaService';
+import {searchLocalIndex} from '../search/searchService';
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput>{
  const {command,args}=parsed;
@@ -13,6 +14,14 @@ export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput
  if(command==='status')return {title:'SYSTEM STATUS // NOMINAL',tone:'success',lines:['Mock OSINT provider ...... ONLINE','Correlation engine ....... ONLINE','Audit stream ............. ACTIVE','Current classification ... INTERNAL']};
  if(command==='history')return {title:'QUERY HISTORY',tone:'info',lines:['Open the execution history tray below for commands, status, provider, and duration.']};
  if(command==='clear')return {title:'CLEAR',tone:'info',lines:[]};
+ if(['search','web','news'].includes(command)){
+  const query=args.join(' ').trim();const requestedLimit=parsed.flags.limit;const limit=typeof requestedLimit==='number'?requestedLimit:20;const requestedSource=String(parsed.flags.source??'all').toLowerCase();
+  if(!query)return {title:'VALIDATION ERROR',tone:'warning',lines:['Usage: search "kata kunci" [--source web|news] [--limit 1-20]']};
+  if(!Number.isInteger(limit)||limit<1||limit>20)return {title:'VALIDATION ERROR',tone:'warning',lines:['--limit harus berupa angka antara 1 dan 20.']};
+  if(command==='search'&&!['all','web','news'].includes(requestedSource))return {title:'VALIDATION ERROR',tone:'warning',lines:['--source harus web atau news.']};
+  const mode=command==='search'?(requestedSource==='web'?'web':requestedSource==='news'?'news':'search'):command as 'web'|'news';const result=searchLocalIndex(query,mode,limit);
+  return {title:`FRONTEND SEARCH // ${result.hits.length} RESULT${result.hits.length===1?'':'S'}`,tone:'success',lines:[`QUERY .......................... ${query}`,`SOURCE ......................... ${result.sourceFilter}`,`MATCHES ........................ ${result.hits.length} / ${result.totalIndexed}`,'LOCAL DEMO INDEX · OPENING SEARCH RESULTS...'],result};
+ }
  if(command==='media'||command==='image'){
   const mode=args[0] as 'analyze'|'metadata'|'ocr'|'hash'|'compare';const allowed=command==='media'?['analyze','compare']:['metadata','ocr','hash'];
   if(!allowed.includes(mode)||!args[1]||(mode==='compare'&&!args[2]))return {title:'VALIDATION ERROR',tone:'warning',lines:[command==='media'?'Usage: media analyze <file> | media compare <image1> <image2>':'Usage: image metadata|ocr|hash <file>','Select files using the MEDIA EVIDENCE picker first.']};
