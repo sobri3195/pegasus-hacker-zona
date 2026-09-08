@@ -7,6 +7,9 @@ describe('Phase 1 command execution',()=>{
  it('searches and ranks the frontend public index',async()=>{const output=await executeCommand(parseCommand('search "teknologi indonesia" --limit 2',{analystId:'A'}));expect(output.result?.kind).toBe('search');if(output.result?.kind==='search'){expect(output.result.hits).toHaveLength(2);expect(output.result.hits.flatMap(hit=>hit.matchedTerms)).toContain('teknologi');}});
  it('filters frontend search results by source',async()=>{const output=await executeCommand(parseCommand('news "public data"',{analystId:'A'}));expect(output.result?.kind).toBe('search');if(output.result?.kind==='search')expect(output.result.hits.every(hit=>hit.source==='NEWS')).toBe(true);});
  it('validates frontend search limits',async()=>{const output=await executeCommand(parseCommand('search data --limit 99',{analystId:'A'}));expect(output.title).toBe('VALIDATION ERROR')});
+ it('opens document analysis as a structured result',async()=>{const output=await executeCommand(parseCommand('document metadata evidence.pdf',{analystId:'A'}));expect(output.result?.kind).toBe('document');});
+ it.each(['ip 203.0.113.24','asn 64500','whois example.com','archive example.com','url https://example.com','person "Nadia Pratama"','organization "Arunika Systems"','entity find "Arunika"','geo "Jakarta"','investigate domain example.test'])('executes the registered workflow %s',async raw=>{const output=await executeCommand(parseCommand(raw,{analystId:'A'}));expect(output.result).toBeDefined();expect(output.title).toContain('COMPLETE');});
+ it('validates evidence and report workflows',async()=>{expect((await executeCommand(parseCommand('evidence add result:456',{analystId:'A'}))).title).toContain('CUSTODY');expect((await executeCommand(parseCommand('report generate CASE-2026-001',{analystId:'A'}))).title).toContain('REPORT READY');});
 });
 
 import {parseCommand as parsePhone} from '../parser';
