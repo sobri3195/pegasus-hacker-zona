@@ -1,6 +1,6 @@
-# PEGASUS ZONA 0.2.0
+# PEGASUS ZONA v0.4.0
 
-**Intelligence Fusion & Verification Layer** is a defensive OSINT console for public, owned, or explicitly authorized data. Version 0.2 adds stateful watch/change/alert, claim-review, evidence-integrity, entity-review, governance, reporting, and evidence-bound AI workflows while retaining every 0.1 command.
+**Intelligence Fusion & Verification Layer** is a defensive OSINT console for public, owned, or explicitly authorized data. Version 0.4 adds stateful watch/change/alert, claim-review, evidence-integrity, entity-review, governance, reporting, and evidence-bound AI workflows while retaining every 0.1 command.
 
 ## Run
 

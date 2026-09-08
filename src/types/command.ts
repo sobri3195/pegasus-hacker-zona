@@ -1,7 +1,8 @@
 export type CommandFlagValue = string | number | boolean;
 export interface ParsedStage { command: string; args: string[]; flags: Record<string, CommandFlagValue>; }
-export interface ParsedCommand extends ParsedStage { raw: string; pipeline: ParsedStage[]; timestamp: string; analystId: string; investigationId?: string; }
-export type ExecutionStatus = 'SUCCESS' | 'BLOCKED' | 'ERROR';
+export interface CommandAST { namespace:string; action?:string; subAction?:string; targetType?:string; target?:string; positionalArguments:string[]; flags:Record<string,CommandFlagValue>; rawInput:string; requiresConfirmation:boolean }
+export interface ParsedCommand extends ParsedStage { ast:CommandAST; raw: string; pipeline: ParsedStage[]; timestamp: string; analystId: string; investigationId?: string; }
+export type ExecutionStatus = 'QUEUED'|'RUNNING'|'PARTIAL'|'SUCCEEDED'|'NO_RESULT'|'PROVIDER_UNAVAILABLE'|'RATE_LIMITED'|'AUTH_REQUIRED'|'MANUAL_REVIEW'|'FAILED'|'CANCELLED'|'DEMO';
 export interface CommandRecord { id: string; raw: string; timestamp: string; duration: number; status: ExecutionStatus; provider: string; caseId?: string; }
 export type EntityKind='DOMAIN'|'IP_ADDRESS'|'ASN'|'HOSTNAME'|'ORGANIZATION'|'PERSON'|'SOCIAL_PROFILE'|'EMAIL'|'USERNAME'|'URL'|'DOCUMENT'|'PHONE'|'LOCATION'|'DATE';
 export interface Provenance {id:string;source:string;retrievedAt:string;method:string;confidence:'HIGH'|'MEDIUM'|'LOW';sourceUrl?:string}
