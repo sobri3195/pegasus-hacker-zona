@@ -8,9 +8,11 @@ import {createDomainIntelligence} from '../domain/domainService';
 import {analyzeMedia} from '../media/mediaService';
 import {searchLocalIndex} from '../search/searchService';
 import {createDocumentIntelligence} from '../document/documentService';
+import {executeFusionCommand} from '../fusion/fusionService';
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 export async function executeCommand(parsed:ParsedCommand):Promise<CommandOutput>{
  const {command,args}=parsed;
+ const fusion=await executeFusionCommand(parsed);if(fusion)return fusion;
  if(command==='help'){const lines=commandRegistry.reduce<string[]>((all,item,index,array)=>{if(index===0||array[index-1].category!==item.category)all.push('',item.category);all.push(`  ${item.usage.padEnd(38)} ${item.description}`);return all;},[]);return {title:'AUTHORIZED COMMAND REFERENCE',tone:'info',lines};}
  if(command==='status')return {title:'SYSTEM STATUS // NOMINAL',tone:'success',lines:['Safe provider adapters ... ONLINE','Python workflow engine ... READY','Correlation engine ....... ONLINE','Audit stream ............. ACTIVE','Current classification ... INTERNAL']};
  if(command==='history')return {title:'QUERY HISTORY',tone:'info',lines:['Open the execution history tray below for commands, status, provider, and duration.']};
