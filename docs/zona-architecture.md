@@ -27,6 +27,10 @@ The console parses an application command language only; it never invokes an ope
 ## Security model
 All future external retrieval must be server-side through allow-listed provider adapters, scoped credentials, rate limits, structured audit events, and case authorization. Relationship assertions must retain source, timestamp, confidence, and analyst validation. Analysts cannot delete audit records.
 
+## Python workflow engine
+
+`python/zona_engine` provides a dependency-free Python boundary for every registered workflow family. It validates and normalizes domains, IP addresses, ASNs, and public HTTP(S) URLs, then emits JSON with a run ID, provenance, timestamps, stages, and findings. It intentionally does not execute shell commands or make arbitrary network requests. Run it with `PYTHONPATH=python python3 -m zona_engine domain example.com`; production provider adapters can replace the deterministic adapter after authentication, authorization, rate limiting, and durable audit storage are configured.
+
 ## Phone Intelligence Indonesia (Phase 1–2)
 
 `phone` commands reuse the command parser, workspace result, graph, timeline, evidence, and case action surfaces. The normalization and prefix allocation dataset live in `src/modules/phone`; public search is behind a provider adapter. Browser code never receives search credentials. `api/zona/phone/lookup.js` selects Serper or Brave from server-side environment variables, applies request throttling, query deduplication, HTTPS URL checks, timeouts, and result deduplication. Without configuration the client uses safe mock data only for `+6281200000000`; every other number returns an honest empty-footprint state.
