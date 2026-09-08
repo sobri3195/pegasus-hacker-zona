@@ -1,0 +1,2 @@
+# Python bindings for the system Nmap executable.
+python-nmap==0.7.1
