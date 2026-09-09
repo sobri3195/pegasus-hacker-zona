@@ -1,9 +1,15 @@
 # Pegasus Zona architecture plan
 
+## Production foundation
+
+The production foundation is represented by framework-neutral server domain services and a PostgreSQL schema. Authentication issues opaque, hashed, expiring, revocable sessions. Authorization combines platform roles with explicit case membership. Audit events form an append-only SHA-256 hash chain. Providers require HTTPS allow-listed endpoints, bounded limits, and secret-manager references. Evidence is content-hashed, AES-GCM encrypted with authenticated case metadata, and reverified after decryption.
+
+`database/schema.sql` defines users, sessions, roles, cases, memberships, providers, evidence, custody, and audit records. These services are intentionally not imported into the Vite browser bundle. A production HTTP runtime must instantiate them with durable PostgreSQL/object-store adapters, a KMS-backed keyring, secure cookies, CSRF protection, request rate limits, and TLS termination.
+
 ## Repository audit
 The repository started as an empty Git skeleton: no existing routing, design system, authentication, database, or API could be integrated. Phase 1 therefore establishes an isolated Vite/React module without inventing production authentication or backend credentials.
 
-The current audit confirms React Router owns the `/zona` workspace and module placeholders, Zustand owns ephemeral analyst state, and Tailwind utility classes form the component system. There is still no Prisma schema, server runtime, authentication middleware, or API route layer in this repository. Phase 1 therefore stays behind a typed provider/service boundary rather than presenting a browser mock as a secured server API. The visible analyst identity and case are demo context, not authentication or RBAC.
+React Router owns the `/zona` workspace and module placeholders, Zustand owns ephemeral analyst state, and Tailwind utility classes form the component system. There is still no persistent server runtime or authentication middleware wired to the browser. The visible analyst identity and case therefore remain demo context until a server adapter integrates the production foundation above.
 
 ## Phase 1 implementation
 - `footprint <domain|username|organization> <target>` creates a structured discovery result with per-finding provenance, entities, evidence-backed relationships, timeline events, and explainable confidence.
