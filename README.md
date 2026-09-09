@@ -14,6 +14,10 @@ npm run build
 
 The default providers are deterministic local demonstration providers and are always labeled **MOCK**. Configure future provider adapters through environment variables; never commit tokens. No real external result is implied by demo output.
 
+## Production foundation
+
+Server-domain primitives for authentication/session, role and case authorization, append-only audit, provider registration, and encrypted evidence storage live in `src/server`. The initial PostgreSQL DDL is in `database/schema.sql`; deployment boundaries are documented in `docs/zona-architecture.md`. Deployers must connect durable repositories, KMS/object storage, and secure HTTP middleware before enabling production access.
+
 ## Command reference
 
 Press **Ctrl+K** or run `help`. Major command families are `dashboard`, `watch`, `changes`, `alert`, `claim`, `source`, `resolve`, `entity`, `org`, `ioc`, `cve`, `threat`, `exposure`, `collection`, `capture`, `evidence`, `note`, `hypothesis`, `question`, `lead`, `playbook`, `report`, `access`, `audit`, `retention`, `redaction`, `ask`, and `ai`. Existing search, phone, email, username, media, document, domain, graph, and timeline commands remain available.
